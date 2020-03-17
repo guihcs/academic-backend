@@ -40,6 +40,7 @@ class Mongo {
 
     async update(collection, query, doc){
         await this.db.collection(collection).replaceOne(query, doc, {upsert: true});
+
     }
 }
 

@@ -41,6 +41,7 @@ router.post('/deleteUser', async (req, res, next) => {
 
 router.post('/updateUser', async (req, res, next) => {
     //todo validation
+
     if (req.body.user._id) {
         req.body.user._id = ObjectID(req.body.user._id);
         await mongo.update('users', {_id: req.body.user._id}, req.body.user);
@@ -58,7 +59,7 @@ router.post('/updateUser', async (req, res, next) => {
 
 router.get('/getUsers/:userType', async (req, res, next) => {
     //todo validation
-    let result = await mongo.find('users', {type: req.params.userType});
+    let result = await mongo.find('users', {type: parseInt(req.params.userType)});
     res.json(result);
 });
 

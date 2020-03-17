@@ -1,48 +1,66 @@
 let express = require('express');
 let router = express.Router();
 let Mongo = require('../src/database/mongo');
+let ObjectID = require('mongodb').ObjectID;
 
 let mongo = Mongo.getInstance();
 
-router.post('/login', function(req, res, next) {
+router.post('/login', async (req, res, next) => {
     //todo validation
-    let result = mongo.find('users', {login: req.body.login});
-    if (result.passive === req.body.password) res.json(result);
-    else {
+    let result = await mongo.find('users', {login: req.body.login});
+
+    if (result[0].password === req.body.password) {
         res.json({
-           status: 'error'
+            status: 'ok',
+            session: result[0]
+        });
+    } else {
+        res.json({
+            status: 'error'
         });
     }
 });
 
-router.post('/insertUser', function(req, res, next) {
+router.post('/insertUser', async (req, res, next) => {
     //todo validation
-    mongo.save('users', req.body.user);
+    await mongo.save('users', req.body.user);
     res.json({
         status: 'ok'
     });
 });
 
-router.post('/deleteUser', function(req, res, next) {
+router.post('/deleteUser', async (req, res, next) => {
     //todo validation
-    mongo.delete('users', {_id: req.body.user._id});
+    let query = {};
+    query[req.body.key] = req.body.value;
+    await mongo.delete('users', query);
     res.json({
         status: 'ok'
     });
 });
 
-router.post('/editUser', function(req, res, next) {
+router.post('/updateUser', async (req, res, next) => {
     //todo validation
-    mongo.update('users', {_id: req.body.user._id}, req.body.user);
-    res.json({
-        status: 'ok'
-    });
+    if (req.body.user._id) {
+        req.body.user._id = ObjectID(req.body.user._id);
+        await mongo.update('users', {_id: req.body.user._id}, req.body.user);
+        res.json({
+            status: 'ok'
+        });
+    } else {
+        await mongo.save('users', req.body.user);
+        res.json({
+            status: 'ok'
+        });
+    }
+
 });
 
-router.post('/getUsers', function(req, res, next) {
+router.get('/getUsers/:userType', async (req, res, next) => {
     //todo validation
-    let result = mongo.find('users', {});
+    let result = await mongo.find('users', {type: req.params.userType});
     res.json(result);
 });
+
 
 module.exports = router;

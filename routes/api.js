@@ -45,8 +45,4 @@ router.post('/getUsers', function(req, res, next) {
     res.json(result);
 });
 
-router.get('/', (req, res) => {
-   res.send('ok');
-});
-
 module.exports = router;

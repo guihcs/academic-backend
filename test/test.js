@@ -100,16 +100,20 @@ describe('API Test', () => {
         it('Test user update', async () => {
             let mockUser = await setupUser();
             let firstQuery = await mongo.find('users', {cpf: mockUser.cpf});
+            assert.equal(firstQuery.length, 1);
             let userId = firstQuery[0]._id;
 
             let user = {
                 name: 'Tiam',
-                cpf: '5124',
-                login: 'qwe',
-                password: 'asd'
+                cpf: '5126124',
+                login: 'qwdase',
+                password: 'acssd'
             };
 
             user._id = userId;
+
+            delete user.login;
+            delete user.password;
 
             let result = await client.post('/updateUser').send({user: user});
 
@@ -121,8 +125,8 @@ describe('API Test', () => {
 
             assert.equal(find[0].name, user.name);
             assert.equal(find[0].cpf, user.cpf);
-            assert.equal(find[0].login, user.login);
-            assert.equal(find[0].password, user.password);
+            assert.equal(find[0].login, mockUser.login);
+            assert.equal(find[0].password, mockUser.password);
 
         });
     });
@@ -133,23 +137,25 @@ describe('API Test', () => {
             let users = [
                 {
                     name: 'Cleitom',
-                    type: '1'
+                    type: 1
                 },
                 {
                     name: 'Jonas',
-                    type: '1'
+                    type: 1
                 },
                 {
                     name: 'Pedro',
-                    type: '0'
+                    type: 0
                 },
                 {
                     name: 'Antonio',
-                    type: '2'
+                    type: 2
                 }
             ];
 
             await mongo.saveMany('users', users);
+            let savedUsers = await mongo.find('users', {});
+            assert.equal(savedUsers.length, users.length);
             let result = await client.get('/getUsers/0');
 
             assert.equal(result.body.length, 1);

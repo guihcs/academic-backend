@@ -43,8 +43,16 @@ router.post('/updateUser', async (req, res, next) => {
     //todo validation
 
     if (req.body.user._id) {
+
         req.body.user._id = ObjectID(req.body.user._id);
-        await mongo.update('users', {_id: req.body.user._id}, req.body.user);
+        let user = await mongo.find('users', {'_id': req.body.user._id});
+
+        delete req.body.user._id;
+
+        for (const key of Object.keys(req.body.user)) {
+            user[0][key] = req.body.user[key];
+        }
+        await mongo.update('users', {_id: user[0]._id}, user[0]);
         res.json({
             status: 'ok'
         });
@@ -61,6 +69,29 @@ router.get('/getUsers/:userType', async (req, res, next) => {
     //todo validation
     let result = await mongo.find('users', {type: parseInt(req.params.userType)});
     res.json(result);
+});
+
+
+router.get('/getExam', async (req, res, next) => {
+    let result = await mongo.find('exams', {});
+    res.json(result[0]);
+});
+
+router.post('/updateExam', async (req, res, next) => {
+    //todo validation
+
+    if (req.body.exam._id) {
+        req.body.exam._id = ObjectID(req.body.exam._id);
+        await mongo.update('exams', {_id: req.body.exam._id}, req.body.exam);
+        res.json({
+            status: 'ok'
+        });
+    } else {
+        await mongo.save('exams', req.body.exam);
+        res.json({
+            status: 'ok'
+        });
+    }
 });
 
 

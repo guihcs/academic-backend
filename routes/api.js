@@ -7,17 +7,24 @@ let mongo = Mongo.getInstance();
 
 router.post('/login', async (req, res, next) => {
     //todo validation
-    let result = await mongo.find('users', {login: req.body.login});
 
-    if (result[0].password === req.body.password) {
-        res.json({
-            status: 'ok',
-            session: result[0]
-        });
-    } else {
+    if (!req.body.email || !req.body.password) {
         res.json({
             status: 'error'
         });
+    } else {
+        let result = await mongo.find('users', {email: req.body.email});
+
+        if (result[0].password === req.body.password) {
+            res.json({
+                status: 'ok',
+                session: result[0]
+            });
+        } else {
+            res.json({
+                status: 'error'
+            });
+        }
     }
 });
 

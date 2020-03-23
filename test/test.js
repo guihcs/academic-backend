@@ -1,4 +1,4 @@
-const assert = require('assert');
+const assert = require('chai').assert;
 const request = require('supertest');
 const app = require('../app');
 const Mongo = require('../src/database/mongo');
@@ -26,7 +26,7 @@ async function setupUser() {
     let user = {
         name: 'Pedrol',
         cpf: '5124',
-        login: 'qwe',
+        email: 'qwe',
         password: 'asd'
     };
 
@@ -34,6 +34,53 @@ async function setupUser() {
 
     return user;
 }
+
+
+function assertChanged(oldObject, newObject, diff) {
+
+    if (diff.change) {
+        for (const key of Object.keys(diff.change)) {
+
+            oldObject[key] = diff.change[key];
+        }
+    }
+
+    if (diff.remove) {
+        for (const key of diff.remove) {
+            delete oldObject[key];
+        }
+    }
+
+    assert.deepEqual(newObject, oldObject);
+}
+
+
+describe('Assert Changed test', () => {
+    it('Object changed', () => {
+
+        let a = {
+            name: 'Pedrol',
+            cpf: '5124',
+            email: 'qwe',
+            password: 'asd'
+        };
+
+        let b = {
+            name: 'Pedrol',
+            cpf: '5124',
+            email: 'qwdase'
+        };
+
+        let diff = {
+            change: {
+                email: 'qwdase'
+            },
+            remove: ['password']
+        };
+
+        assertChanged(a, b, diff);
+    });
+});
 
 describe('API Test', () => {
 
@@ -47,34 +94,67 @@ describe('API Test', () => {
             let find = await mongo.find('users', {cpf: user.cpf});
             let resultUser = find[0];
 
-            assert.equal(resultUser.name, user.name);
-            assert.equal(resultUser.cpf, user.cpf);
-            assert.equal(resultUser.login, user.login);
-            assert.equal(resultUser.password, user.password);
+            assert.deepEqual(resultUser, user);
         });
     });
 
 
     describe('Login', () => {
-        it('Test user login', async () => {
+        it('Test correct data', async () => {
             let user = await setupUser();
 
             let loginData = {
-                login: 'qwe',
-                password: 'asd'
+                email: user.email,
+                password: user.password
             };
 
             let result = await client.post('/login').send(loginData);
 
             assert.equal(result.body.status, 'ok');
             let responseUser = result.body.session;
+            delete user._id;
+            delete responseUser._id;
+            assert.deepEqual(responseUser, user);
+        });
 
-            assert.equal(responseUser.name, user.name);
-            assert.equal(responseUser.cpf, user.cpf);
-            assert.equal(responseUser.login, user.login);
-            assert.equal(responseUser.password, user.password);
+        it('Test blank data', async () => {
+            let user = await setupUser();
 
+            let loginData = {
+                email: '',
+                password: ''
+            };
 
+            let result = await client.post('/login').send(loginData);
+
+            assert.equal(result.body.status, 'error');
+
+        });
+
+        it('Test wronk login', async () => {
+            let user = await setupUser();
+
+            let loginData = {
+                email: 'asfasff',
+                password: user.password
+            };
+
+            let result = await client.post('/login').send(loginData);
+
+            assert.equal(result.body.status, 'error');
+        });
+
+        it('Test wrong password', async () => {
+            let user = await setupUser();
+
+            let loginData = {
+                email: user.email,
+                password: 'ascascasc'
+            };
+
+            let result = await client.post('/login').send(loginData);
+
+            assert.equal(result.body.status, 'error');
         });
     });
 
@@ -90,7 +170,7 @@ describe('API Test', () => {
             assert.equal(result.body.status, 'ok');
 
             let find = await mongo.find('users', {});
-            assert.equal(find.length, 0);
+            assert.lengthOf(find, 0);
         });
 
     });
@@ -100,34 +180,29 @@ describe('API Test', () => {
         it('Test user update', async () => {
             let mockUser = await setupUser();
             let firstQuery = await mongo.find('users', {cpf: mockUser.cpf});
-            assert.equal(firstQuery.length, 1);
+            assert.lengthOf(firstQuery, 1);
             let userId = firstQuery[0]._id;
 
             let user = {
-                name: 'Tiam',
-                cpf: '5126124',
-                login: 'qwdase',
+                email: 'qwdase',
                 password: 'acssd'
             };
 
             user._id = userId;
-
-            delete user.login;
-            delete user.password;
-
             let result = await client.post('/updateUser').send({user: user});
 
             assert.equal(result.body.status, 'ok');
 
             let find = await mongo.find('users', {});
 
-            assert.equal(find.length, 1);
+            assert.lengthOf(find, 1);
 
-            assert.equal(find[0].name, user.name);
-            assert.equal(find[0].cpf, user.cpf);
-            assert.equal(find[0].login, mockUser.login);
-            assert.equal(find[0].password, mockUser.password);
-
+            assertChanged(firstQuery[0], find[0], {
+                change: {
+                    email: user.email,
+                    password: user.password
+                }
+            });
         });
     });
 
@@ -158,15 +233,15 @@ describe('API Test', () => {
             assert.equal(savedUsers.length, users.length);
             let result = await client.get('/getUsers/0');
 
-            assert.equal(result.body.length, 1);
+            assert.lengthOf(result.body, 1);
 
             result = await client.get('/getUsers/1');
 
-            assert.equal(result.body.length, 2);
+            assert.lengthOf(result.body, 2);
 
             result = await client.get('/getUsers/2');
 
-            assert.equal(result.body.length, 1);
+            assert.lengthOf(result.body, 1);
 
         });
     });

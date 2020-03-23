@@ -14,7 +14,11 @@ router.post('/login', async (req, res, next) => {
         });
     } else {
         let result = await mongo.find('users', {email: req.body.email});
-
+        if (result.length <= 0) {
+            res.json({
+                status: 'error'
+            });
+        }
         if (result[0].password === req.body.password) {
             res.json({
                 status: 'ok',

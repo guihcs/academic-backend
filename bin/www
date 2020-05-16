@@ -8,6 +8,7 @@ let app = require('../app');
 let debug = require('debug')('academic-backend:server');
 let http = require('http');
 let Mongo = require('../src/database/mongo');
+let socket = require('../socket/socket');
 
 /**
  * Get port from environment and store in Express.
@@ -21,6 +22,7 @@ app.set('port', port);
  */
 
 let server = http.createServer(app);
+socket(server);
 
 /**
  * Listen on provided port, on all network interfaces.

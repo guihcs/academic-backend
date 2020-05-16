@@ -5,7 +5,10 @@ let cookieParser = require('cookie-parser');
 let logger = require('morgan');
 let apiRouter = require('./routes/api');
 const cors = require('cors');
+const helmet = require('helmet');
 const nocache = require('nocache');
+const auth = require('./middlewares/auth');
+const session = require('./routes/session');
 
 let app = express();
 
@@ -14,6 +17,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'hbs');
 app.set('etag', false);
 
+app.use(helmet());
 app.use(nocache());
 app.use(logger('dev'));
 app.use(cors());
@@ -21,6 +25,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(auth);
+app.use(session);
 
 app.use('/', apiRouter);
 

@@ -1,11 +1,13 @@
-const db = require("mongodb/lib/operations/command");
 const MongoClient = require('mongodb').MongoClient;
+let ObjectID = require('mongodb').ObjectID;
+const GridFS = require('mongodb').GridFSBucket;
 
 class Mongo {
 
     static instance;
     client;
     db;
+    bucket;
 
     static getInstance(){
         if (!Mongo.instance) Mongo.instance = new Mongo();
@@ -16,6 +18,10 @@ class Mongo {
         this.client = new MongoClient(url, {useUnifiedTopology: true, useNewUrlParser: true});
         await this.client.connect();
         this.db = this.client.db(dbName);
+        this.bucket = new GridFS(this.db, {
+            chunkSizeBytes: 1024,
+            bucketName: 'files'
+        });
     }
 
     async close(){
@@ -38,10 +44,27 @@ class Mongo {
         await this.db.collection(collection).deleteMany(query);
     }
 
-    async update(collection, query, doc){
+    async upsert(collection, query, doc){
         await this.db.collection(collection).replaceOne(query, doc, {upsert: true});
 
     }
+
+    async update(collection, id, value){
+        await this.db.collection(collection).updateMany({_id: ObjectID(id)}, {'$set': value});
+    }
+
+    async upload(fileName, readStream){
+        return new Promise((resolve, reject) => {
+            readStream.pipe(this.bucket.openUploadStream(fileName))
+                .on('error', reject)
+                .on('finish', resolve);
+        });
+    }
+
+    download(filename){
+        return this.bucket.openDownloadStreamByName(filename);
+    }
+
 }
 
 

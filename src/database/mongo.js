@@ -29,15 +29,24 @@ class Mongo {
     }
 
     async save(collection, doc){
-        await this.db.collection(collection).insertOne(doc);
+        let opResult = await this.db.collection(collection).insertOne(doc);
+        return {
+            id: opResult.insertedId,
+            result: opResult.result
+        };
     }
 
     async saveMany(collection, data){
-        await this.db.collection(collection).insertMany(data);
+        let opResult = await this.db.collection(collection).insertMany(data);
+        return {
+            status: 'ok'
+//            id: opResult.insertedId,
+//            result: opResult.result
+        };
     }
 
     async find(collection, query){
-        return this.db.collection(collection).find(query).toArray();
+        return (await this.db.collection(collection).find(query)).toArray();
     }
 
     async delete(collection, query){
@@ -53,16 +62,22 @@ class Mongo {
         await this.db.collection(collection).updateMany({_id: ObjectID(id)}, {'$set': value});
     }
 
-    async upload(fileName, readStream){
+    async upload(fileName, readStream, metadata){
         return new Promise((resolve, reject) => {
-            readStream.pipe(this.bucket.openUploadStream(fileName))
+            readStream.pipe(this.bucket.openUploadStream(fileName, {
+                metadata
+            }))
                 .on('error', reject)
                 .on('finish', resolve);
         });
     }
 
-    download(filename){
+    downloadByName(filename){
         return this.bucket.openDownloadStreamByName(filename);
+    }
+
+    downloadByID(id){
+        return this.bucket.openDownloadStream(new ObjectID(id));
     }
 
 }

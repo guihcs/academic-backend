@@ -9,6 +9,7 @@ const helmet = require('helmet');
 const nocache = require('nocache');
 const auth = require('./middlewares/auth');
 const session = require('./routes/session');
+const chunk = require('./middlewares/chunk');
 
 let app = express();
 
@@ -21,7 +22,7 @@ app.use(helmet());
 app.use(nocache());
 app.use(logger('dev'));
 app.use(cors());
-app.use(express.json());
+app.use(chunk);
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));

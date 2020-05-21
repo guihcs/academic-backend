@@ -1,7 +1,7 @@
 let express = require('express');
 let router = express.Router();
 let multer = require('multer');
-let upload = multer();
+let upload = multer({ dest: '~/academic/uploads/', limits: { fieldSize: 100 * 1024 * 1024 }}).single('file');
 let Mongo = require('../src/database/mongo');
 let ObjectID = require('mongodb').ObjectID;
 let {Readable, Writable} = require('stream');
@@ -10,21 +10,62 @@ let fs = require('fs');
 let mongo = Mongo.getInstance();
 
 
-router.post('/file/:id', upload.single(), async (req, res) => {
+/*router.post('/file/:id', async (req, res) => {
+    upload(req, res, function (err) {
+        
+        if (err instanceof multer.MulterError) {
+            // A Multer error occurred when uploading.
+            console.log('multer error');
+            console.log(err);
+            res.json({status: 'error'});
+            
+        } else if (err) {
+            // An unknown error occurred when uploading.
+            console.log(err);
+            res.json({status: 'error'});
+        }
+
+        // Everything went fine.
+    });
     await mongo.upload(req.params.id, Readable.from(req.body.file));
     return res.json({status: 'ok'});
 });
 
 router.get('/file/:id', async (req, res) => {
     try{
-    	let stream = mongo.download(req.params.id);
+    	let stream = mongo.downloadByName(req.params.id);
     	stream.pipe(res);
 	    res.attachment(req.params.id);
     }catch(e){
 	    console.log(e);
 	    res.json({status: 'error'});
     }
+});*/
+
+router.post('/file', async (req, res) => {
+    
+    let file = req.body;
+    file.metadata.status = 'incomplete';
+    let opRes = await mongo.save('files.files', file);
+    res.json({status: 'ok', id: opRes.id});
 });
+
+router.post('/chunk', async (req, res) => {
+    let chunk = req.body;
+    chunk.files_id = new ObjectID(chunk.files_id);
+    let opRes = await mongo.save('files.chunks', chunk);
+    res.json({status: 'ok'});
+});
+
+router.get('/chunk', async (req, res) => {
+    
+    let query = req.query;
+    query.n = parseInt(query.n);
+    let chunks = await mongo.find('files.chunks', {files_id: new ObjectID(query.id), n: query.n});
+
+    res.json({status: 'ok', chunk: chunks[0]});
+});
+
 
 router.post('/login', async (req, res, next) => {
     //todo validation

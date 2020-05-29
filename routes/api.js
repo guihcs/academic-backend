@@ -10,38 +10,6 @@ let fs = require('fs');
 let mongo = Mongo.getInstance();
 
 
-/*router.post('/file/:id', async (req, res) => {
-    upload(req, res, function (err) {
-        
-        if (err instanceof multer.MulterError) {
-            // A Multer error occurred when uploading.
-            console.log('multer error');
-            console.log(err);
-            res.json({status: 'error'});
-            
-        } else if (err) {
-            // An unknown error occurred when uploading.
-            console.log(err);
-            res.json({status: 'error'});
-        }
-
-        // Everything went fine.
-    });
-    await mongo.upload(req.params.id, Readable.from(req.body.file));
-    return res.json({status: 'ok'});
-});
-
-router.get('/file/:id', async (req, res) => {
-    try{
-    	let stream = mongo.downloadByName(req.params.id);
-    	stream.pipe(res);
-	    res.attachment(req.params.id);
-    }catch(e){
-	    console.log(e);
-	    res.json({status: 'error'});
-    }
-});*/
-
 router.post('/file', async (req, res) => {
     
     let file = req.body;

@@ -6,6 +6,12 @@ const { check, validationResult } = require('express-validator');
 let mongo = Mongo.getInstance();
 let jwt = require('jsonwebtoken');
 
+const gsign = require('../src/mail/gmail');
+const {google} = require('googleapis');
+const buildEmail = require('../src/mail/mailbuilder');
+
+
+
 router.post('/nlogin', [
 
 ], async (req, res, next) => {
@@ -26,9 +32,8 @@ router.post('/nlogin', [
     res.json({token: token});
 });
 
-router.post('/addUser/', [
+router.post('/nsign', [
     check('email').isEmail(),
-    check('password').isLength({ min: 6 }),
     check('cpf').isLength({ min: 11, max: 11}),
     check('email').custom(async value => {
         let user = await mongo.find('users', {email: value});
@@ -42,19 +47,51 @@ router.post('/addUser/', [
     }
 
     let userData = req.body;
-    userData.password = hashPassword(userData.password);
 
-    mongo.save('users', userData);
+    let result = await mongo.save('users', userData);
+    let gmailAuth = await gsign();
+    const gmail = google.gmail({version: 'v1', auth: gmailAuth});
 
+    let configLink = `http://localhost:4200/password/${result.id}`;
+    let bodyMessage = `<h1>Academic</h1>
+<p>Access this link to create a password:</p>
+<a href="${configLink}">${configLink}</a>`;
 
+    let base64EncodedEmail = buildEmail({
+        from: 'Academic <testacademic7@gmail.com>',
+        to: `${userData.email.split(' ')[0]} <${userData.email}>`,
+        subject: 'Create Password',
+        sender: 'testacademic7@gmail.com',
+        content: 'text/html; charset=UTF-8',
+        body:  bodyMessage
+    });
+
+    let request = gmail.users.messages.send({
+        'userId': 'me',
+        'resource': {
+            'raw': base64EncodedEmail
+        }
+    });
 
     res.send('ok');
-
 });
 
-router.post('/sign/:signKey', async (req, res) => {
+router.post('/sign/:id', [
+    check('password').isLength({ min: 6 })
+], async (req, res) => {
+    let userData = req.body;
+    userData.password = hashPassword(userData.password);
+    mongo.update('users', req.params.id, {
+       password: userData.password
+    });
 
+    res.json({status: 'ok'});
 });
+
+
+async function mail(data){
+
+}
 
 
 module.exports = router;

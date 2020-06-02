@@ -11,13 +11,12 @@ const {google} = require('googleapis');
 const buildEmail = require('../src/mail/mailbuilder');
 
 
-
 router.post('/nlogin', [
 
 ], async (req, res, next) => {
     let loginData = req.body;
     let user = await mongo.find('users', {email: loginData.email});
-    if (user.length <= 0 && hashPassword(user[0].password)!== loginData.password) {
+    if (user.length <= 0 && user[0].password !== hashPassword(loginData.password)) {
         res.status(400).json({status: 'error'});
         return;
     }
@@ -27,18 +26,23 @@ router.post('/nlogin', [
         type: user[0].type,
         name: user[0].name
     }, 'academic-key');
-    console.log(token);
-
-    res.json({token: token});
+    
+    delete user.password;
+    
+    res.json({
+        status: 'ok',
+        token,
+        profile: user[0]
+    });    
 });
 
 router.post('/nsign', [
-    check('email').isEmail(),
+/*    check('email').isEmail(),
     check('cpf').isLength({ min: 11, max: 11}),
     check('email').custom(async value => {
         let user = await mongo.find('users', {email: value});
         if(user.length > 0) await Promise.reject('user already registered.');
-    })
+    })*/
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -49,10 +53,11 @@ router.post('/nsign', [
     let userData = req.body;
 
     let result = await mongo.save('users', userData);
+    
     let gmailAuth = await gsign();
     const gmail = google.gmail({version: 'v1', auth: gmailAuth});
 
-    let configLink = `http://localhost:4200/password/${result.id}`;
+    let configLink = `http://localhost:4200/activate/${result.id}`;
     let bodyMessage = `<h1>Academic</h1>
 <p>Access this link to create a password:</p>
 <a href="${configLink}">${configLink}</a>`;
@@ -73,25 +78,39 @@ router.post('/nsign', [
         }
     });
 
-    res.send('ok');
-});
-
-router.post('/sign/:id', [
-    check('password').isLength({ min: 6 })
-], async (req, res) => {
-    let userData = req.body;
-    userData.password = hashPassword(userData.password);
-    mongo.update('users', req.params.id, {
-       password: userData.password
-    });
-
     res.json({status: 'ok'});
 });
 
+router.post('/activate/:id', [
+    //check('password').isLength({ min: 6 })
+], async (req, res) => {
+    let userData = req.body;
+    
+    let user = await mongo.find('users', {'_id': new ObjectID(req.params.id)});
+    
+    userData.password = hashPassword(userData.password);
+    
+    await mongo.update('users', req.params.id, {
+       password: userData.password
+    });
 
-async function mail(data){
 
-}
+    let token = jwt.sign({
+        id: user[0]._id,
+        type: user[0].type,
+        name: user[0].name
+    }, 'academic-key');
+    
+    delete user.password;
+        
+    res.json({
+        status: 'ok',
+        token,
+        profile: user[0]
+    });    
+    
+});
+
 
 
 module.exports = router;

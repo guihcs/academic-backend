@@ -3,3 +3,4 @@ credentials.json
 token.json
 .nyc_output
 .idea
+.codacy-coverage

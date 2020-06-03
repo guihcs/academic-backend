@@ -5,9 +5,20 @@ const Mongo = require('../../src/database/mongo');
 let mongo = Mongo.getInstance();
 let client = request(app);
 
+const {MongoMemoryServer} = require('mongodb-memory-server');
+
+let mongod;
+
 before(async () => {
-    const uri = 'mongodb://localhost:27017';
-    await mongo.connect(uri, 'test');
+
+    mongod = new MongoMemoryServer();
+
+    const uri = await mongod.getUri();
+    const port = await mongod.getPort();
+    const dbPath = await mongod.getDbPath();
+    const dbName = await mongod.getDbName();
+
+    await mongo.connect(uri, dbName);
 });
 
 
@@ -22,6 +33,7 @@ afterEach(async () => {
 
 after(async () => {
     await mongo.close();
+    await mongod.stop();
 });
 
 

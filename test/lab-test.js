@@ -6,9 +6,6 @@ let client = request(app);
 
 describe("Lab", () => {
     it("Test", async () => {
-       let result = await client.get('/r');
-       console.log(result.body);
-
 
     });
 

@@ -4,7 +4,7 @@ const app = require('../../app');
 const Mongo = require('../../src/database/mongo');
 let mongo = Mongo.getInstance();
 let client = request(app);
-
+const server = require('../../bin/www');
 const {MongoMemoryServer} = require('mongodb-memory-server');
 
 let mongod;
@@ -34,6 +34,7 @@ afterEach(async () => {
 after(async () => {
     await mongo.close();
     await mongod.stop();
+    server.close();
 });
 
 

@@ -6,7 +6,7 @@ let mongo = Mongo.getInstance();
 let client = request(app);
 let {assertChanged} = require('../utils/test-utils');
 let DataUtils = require('../utils/data-utils');
-
+const server = require('../../bin/www');
 const {MongoMemoryServer} = require('mongodb-memory-server');
 
 let mongod;
@@ -34,6 +34,7 @@ afterEach(async () => {
 after(async () => {
     await mongo.close();
     await mongod.stop();
+    server.close();
 });
 
 

@@ -79,6 +79,10 @@ class Mongo {
     downloadByID(id){
         return this.bucket.openDownloadStream(new ObjectID(id));
     }
+    
+    async stats(collection){
+        return this.db.collection(collection).stats();
+    }
 
 }
 

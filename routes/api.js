@@ -233,7 +233,11 @@ router.delete('/delete/:collection/:id', async (req, res) => {
 });
 
 
-
+router.get('/count/:collection', async (req, res) => {
+    
+    
+    
+});
 
 
 module.exports = router;

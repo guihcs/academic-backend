@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "start": "nodemon ./bin/www",
-    "test": "nyc --reporter=lcov  --report-dir .github/workspace/ mocha --exit"
+    "test": "mocha --exit",
+    "test-coverage-github": "nyc --reporter=lcov mocha --exit --report-dir"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",

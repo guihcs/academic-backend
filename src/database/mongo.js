@@ -39,9 +39,9 @@ class Mongo {
     async saveMany(collection, data){
         let opResult = await this.db.collection(collection).insertMany(data);
         return {
-            status: 'ok'
-//            id: opResult.insertedId,
-//            result: opResult.result
+            status: 'ok',
+           id: opResult.insertedId,
+           result: opResult.result
         };
     }
 
@@ -82,6 +82,12 @@ class Mongo {
     
     async stats(collection){
         return this.db.collection(collection).stats();
+        
+    }
+    
+    async page(collection, min, max){
+        let results = await this.db.collection('users').find({}).skip(min).limit(max-min).toArray();
+        return results;
     }
 
 }

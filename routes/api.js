@@ -209,15 +209,6 @@ router.get('/all/:collection', async (req, res) => {
 });
 
 
-router.get('/:collection/:id', async (req, res) => {
-
-    
-    let result = await mongo.find(req.params.collection, {
-        '_id': ObjectID(req.params.id)
-    });
-
-    return res.json(result);
-});
 
 router.post('/update/:collection', async (req, res) => {
     let data = req.body;
@@ -234,10 +225,35 @@ router.delete('/delete/:collection/:id', async (req, res) => {
 
 
 router.get('/count/:collection', async (req, res) => {
-    
-    
+    let result = await mongo.stats(req.params.collection);
+
+    res.json({
+        count: result.count
+    });
     
 });
 
+
+router.get('/page/:collection/:min/:max', async (req, res) => {
+    let params = req.params;
+    params.min = parseInt(params.min);
+    params.max = parseInt(params.max);
+    
+    let results = await mongo.page(params.collection, params.min, params.max);
+    res.json(results);
+});
+
+
+
+
+router.get('/:collection/:id', async (req, res) => {
+
+    
+    let result = await mongo.find(req.params.collection, {
+        '_id': ObjectID(req.params.id)
+    });
+
+    return res.json(result);
+});
 
 module.exports = router;

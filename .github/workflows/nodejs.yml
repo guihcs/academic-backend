@@ -29,6 +29,6 @@ jobs:
     - run: npm run test-coverage-github ${{ format('{0}/coverage/', github.workspace) }}
     - run: |
         export CODACY_PROJECT_TOKEN=${{ secrets.CODACY_PROJECT_TOKEN }}
-        bash <(curl -Ls https://coverage.codacy.com/get.sh) report -r ${{ format('{0}/coverage/dynamic-forms/lcov.info', github.workspace) }} --project-token ${{ secrets.CODACY_PROJECT_TOKEN }}
+        bash <(curl -Ls https://coverage.codacy.com/get.sh) report -r ${{ format('{0}/coverage/lcov.info', github.workspace) }} --project-token ${{ secrets.CODACY_PROJECT_TOKEN }}
         bash <(curl -Ls https://coverage.codacy.com/get.sh) final
      

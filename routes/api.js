@@ -246,14 +246,14 @@ router.get('/page/:collection/:min/:max', async (req, res) => {
 
 
 
-router.get('/:collection/:id', async (req, res) => {
+router.get('/query', async (req, res) => {
 
-    
-    let result = await mongo.find(req.params.collection, {
-        '_id': ObjectID(req.params.id)
+    let result = await mongo.find(req.query.collection, {
+        '_id': ObjectID(req.query.id)
     });
 
-    return res.json(result);
+    return res.json(result);    
+
 });
 
 module.exports = router;
